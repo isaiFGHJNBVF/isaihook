@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IsaiHook</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --bg: #07070d;
+  --bg-2: #12121a;
+  --fg: #e8e8f0;
+  --muted: #6b6b80;
+  --accent: #b478ff;
+  --accent-2: #00ffd1;
+  --danger: #ff3860;
+  --border: rgba(180, 120, 255, 0.15);
+  --card: rgba(20, 20, 30, 0.7);
+  --discord-bg: #313338;
+  --discord-fg: #dbdee1;
+  --discord-mute: #949ba4;
+  --discord-link: #00a8fc;
+  --discord-embed: #2b2d31;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.title-mono { font-family: 'JetBrains Mono', monospace; }
+.glow-text { text-shadow: 0 0 40px rgba(180, 120, 255, 0.5); }
+
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(180,120,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,120,255,0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:50px 50px;} }
+
+.bg-blob {
+  position: fixed; border-radius: 50%; filter: blur(100px);
+  opacity: 0.35; z-index: 0; pointer-events: none;
+  animation: blobFloat 18s ease-in-out infinite;
+}
+.bg-blob.one { width: 600px; height: 600px; background: #b478ff; top: -250px; left: -200px; }
+.bg-blob.two { width: 500px; height: 500px; background: #00ffd1; bottom: -200px; right: -200px; animation-delay: -6s; }
+.bg-blob.three { width: 350px; height: 350px; background: #ff3860; top: 40%; left: 50%; animation-delay: -10s; opacity: 0.15; }
+@keyframes blobFloat { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(60px,-40px) scale(1.15);} }
+
+.glass-card {
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #b478ff, #8a4dff);
+  color: white; font-weight: 700;
+  padding: 16px 24px; border-radius: 12px; border: none;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; overflow: hidden;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  font-size: 14px; user-select: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(180, 120, 255, 0.4); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary.spamming {
+  background: linear-gradient(135deg, #ff3860, #ff0040);
+  box-shadow: 0 0 30px rgba(255, 56, 96, 0.6);
+  animation: shake 0.15s ease-in-out infinite;
+}
+@keyframes shake {
+  0%,100% { transform: translate(0,0); }
+  25% { transform: translate(-1px,1px); }
+  75% { transform: translate(1px,-1px); }
+}
+
+.btn-ghost {
+  background: transparent; color: var(--fg);
+  border: 1px solid var(--border);
+  padding: 12px 20px; border-radius: 12px;
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 700;
+}
+.btn-ghost:hover { border-color: var(--accent); background: rgba(180, 120, 255, 0.08); }
+.btn-ghost.active { background: rgba(180, 120, 255, 0.15); border-color: var(--accent); color: var(--accent); }
+
+.input-field, .textarea-field, .select-field {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 12px 16px; border-radius: 10px;
+  width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; transition: all 0.2s;
+}
+.input-field:focus, .textarea-field:focus, .select-field:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(180, 120, 255, 0.15);
+}
+.textarea-field { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+.field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--muted);
+  margin-bottom: 6px; display: block;
+}
+
+.console {
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; max-height: 220px;
+  overflow-y: auto; color: var(--accent-2);
+}
+.console-line { padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.04); word-break: break-all; }
+.console-line.error { color: var(--danger); }
+.console-line.success { color: #00ff88; }
+.console-line.info { color: var(--accent-2); }
+.console-line.warn { color: #ffcc00; }
+
+.stat-box {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.stat-box::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1;
+}
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--muted); margin-top: 6px;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(180,120,255,0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(180,120,255,0.5); }
+
+.toast {
+  position: fixed; top: 20px; right: 20px;
+  background: var(--card); backdrop-filter: blur(20px);
+  border: 1px solid var(--border); padding: 12px 20px;
+  border-radius: 10px; z-index: 100;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  transform: translateX(420px); transition: transform 0.3s;
+}
+.toast.show { transform: translateX(0); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
+.toast.success { border-color: #00ff88; color: #00ff88; }
+
+.progress-track {
+  height: 4px; background: rgba(255,255,255,0.05);
+  border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  width: 0%; transition: width 0.3s;
+}
+
+.status-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: #00ff88;
+  box-shadow: 0 0 10px #00ff88;
+  animation: blink 1.5s ease-in-out infinite;
+}
+.status-dot.spamming { background: var(--danger); box-shadow: 0 0 12px var(--danger); animation-duration: 0.4s; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+.section-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; }
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+.section-divider span {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 3px; color: var(--muted);
+}
+
+.press-indicator {
+  position: absolute; bottom: 0; left: 0;
+  height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--accent-2), #fff);
+  box-shadow: 0 0 10px var(--accent-2);
+}
+
+.hidden { display: none !important; }
+
+.tag {
+  display: inline-block; padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  border-radius: 4px; background: rgba(180,120,255,0.15);
+  color: var(--accent); border: 1px solid rgba(180,120,255,0.3);
+  letter-spacing: 1px;
+}
+.tag.danger { background: rgba(255,56,96,0.15); color: var(--danger); border-color: rgba(255,56,96,0.3); }
+.tag.success { background: rgba(0,255,136,0.12); color: #00ff88; border-color: rgba(0,255,136,0.3); }
+
+.scan-line { position: relative; overflow: hidden; }
+.scan-line::after {
+  content: ''; position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(180,120,255,0.08), transparent);
+  animation: scan 4s linear infinite;
+}
+@keyframes scan { to { left: 100%; } }
+
+.title-glitch { position: relative; display: inline-block; }
+.title-glitch::before, .title-glitch::after {
+  content: attr(data-text); position: absolute; top: 0; left: 0;
+  width: 100%; opacity: 0.6;
+}
+.title-glitch::before { color: var(--accent); animation: glitch1 3s infinite; }
+.title-glitch::after { color: var(--accent-2); animation: glitch2 3s infinite; }
+@keyframes glitch1 { 0%,90%,100% { transform: translate(0); opacity: 0; } 92% { transform: translate(-2px, 1px); opacity: 0.7; } 94% { transform: translate(2px, -1px); opacity: 0.7; } 96% { transform: translate(-1px, -1px); opacity: 0.7; } }
+@keyframes glitch2 { 0%,90%,100% { transform: translate(0); opacity: 0; } 93% { transform: translate(2px, 1px); opacity: 0.7; } 95% { transform: translate(-2px, -1px); opacity: 0.7; } 97% { transform: translate(1px, 1px); opacity: 0.7; } }
+
+/* Discord Preview Styles */
+.discord-preview {
+  background: var(--discord-bg);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'gg sans', 'Noto Sans', Helvetica, Arial, sans-serif;
+  color: var(--discord-fg);
+  min-height: 150px;
+}
+.dp-header { display: flex; align-items: flex-start; gap: 12px; }
+.dp-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+  background-size: cover; background-position: center;
+}
+.dp-body { flex: 1; min-width: 0; }
+.dp-user-info { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.dp-username { font-weight: 600; color: #fff; font-size: 15px; }
+.dp-timestamp { font-size: 11px; color: var(--discord-mute); }
+.dp-content { font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+
+/* Embed Layout */
+.dp-embed {
+  margin-top: 8px;
+  background: var(--discord-embed);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 12px 16px;
+  max-width: 432px;
+  display: flex;
+  gap: 16px;
+}
+.dp-embed-main { flex: 1; min-width: 0; }
+
+/* Embed Author */
+.dp-embed-author { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.dp-embed-author-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.dp-embed-author-name { font-weight: 600; color: #fff; font-size: 14px; }
+
+.dp-embed-title { font-weight: 700; color: #fff; font-size: 15px; margin-bottom: 4px; }
+.dp-embed-desc { font-size: 14px; line-height: 1.4; color: var(--discord-fg); }
+.dp-embed-image { max-width: 100%; border-radius: 4px; margin-top: 8px; display: block; }
+.dp-embed-thumbnail { width: 80px; height: 80px; border-radius: 4px; object-fit: cover; flex-shrink: 0; display: block; }
+
+/* Embed Footer */
+.dp-embed-footer { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.dp-embed-footer-icon { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.dp-embed-footer-text { font-size: 12px; color: var(--discord-mute); }
+
+.dp-emoji {
+  width: 22px; height: 22px;
+  vertical-align: middle;
+  margin: 0 1px;
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-blob one"></div>
+<div class="bg-blob two"></div>
+<div class="bg-blob three"></div>
+
+<div class="relative z-10 max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <header class="mb-10 text-center">
+    <div class="inline-flex items-center gap-2 mb-3 text-xs title-mono text-[var(--muted)]">
+      <span class="status-dot" id="globalStatus"></span>
+      <span>SYSTEM ONLINE · v2.2.0</span>
+    </div>
+    <h1 class="title-mono text-5xl md:text-7xl font-extrabold glow-text mb-3 tracking-tight">
+      <span class="title-glitch" data-text="Isai">Isai</span><span style="color: var(--accent-2);">Hook</span>
+    </h1>
+    <p class="text-sm text-[var(--muted)] title-mono">// discord webhook control terminal</p>
+    <div class="flex justify-center gap-2 mt-4 flex-wrap">
+      <span class="tag">EMBEDS</span>
+      <span class="tag">IMAGES</span>
+      <span class="tag">AUTHOR & FOOTER</span>
+      <span class="tag">CHANNEL ROUTING</span>
+      <span class="tag success">LIVE PREVIEW</span>
+      <span class="tag success">LONG-PRESS SPAM</span>
+    </div>
+  </header>
+
+  <!-- Target & Channels -->
+  <section class="mb-6 glass-card p-6">
+    <label class="field-label">// PRIMARY WEBHOOK URL</label>
+    <input type="text" id="webhookUrl" class="input-field" placeholder="https://discord.com/api/webhooks/{id}/{token}" oninput="updateUrlCount()">
+
+    <div class="section-divider"><span>Channel Router</span></div>
+    <label class="field-label">// ROUTE TO MULTIPLE CHANNELS (PASTE WEBHOOK URLS)</label>
+    <textarea id="channelRouter" class="textarea-field" placeholder="https://discord.com/api/webhooks/...&#10;https://discord.com/api/webhooks/..." oninput="updateUrlCount()"></textarea>
+    <div class="mt-2 text-xs text-[var(--muted)] title-mono" id="urlCount">// 1 endpoint loaded</div>
+  </section>
+
+  <!-- Action Selection -->
+  <section class="mb-6">
+    <div class="section-divider"><span>Choose Action</span></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <button class="btn-ghost active text-left p-5" data-action="send" onclick="setAction('send')">
+        <div class="title-mono text-xs text-[var(--muted)]">ACTION 01</div>
+        <div class="text-xl font-bold mt-1">SEND HOOK</div>
+        <div class="text-xs text-[var(--muted)] mt-1">Send message — long press to spam</div>
+      </button>
+      <button class="btn-ghost text-left p-5" data-action="edit" onclick="setAction('edit')">
+        <div class="title-mono text-xs text-[var(--muted)]">ACTION 02</div>
+        <div class="text-xl font-bold mt-1">EDIT WEBHOOK</div>
+        <div class="text-xs text-[var(--muted)] mt-1">Edit existing message by ID</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Panel -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Left: Builder -->
+    <div class="glass-card p-6">
+      <!-- SEND PANEL -->
+      <div id="sendPanel">
+        <label class="field-label">// MESSAGE CONTENT</label>
+        <textarea id="messageContent" class="textarea-field" placeholder="Enter message content..." oninput="updatePreview()"></textarea>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label class="field-label">// OVERRIDE USERNAME</label>
+            <input type="text" id="overrideName" class="input-field" placeholder="Custom name" oninput="updatePreview()">
+          </div>
+          <div>
+            <label class="field-label">// OVERRIDE AVATAR URL</label>
+            <input type="text" id="overrideAvatar" class="input-field" placeholder="https://..." oninput="updatePreview()">
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Embed Builder</span></div>
+        <div class="grid grid-cols-1 gap-3">
+          <div class="flex items-center gap-3">
+            <input type="checkbox" id="embedToggle" class="w-5 h-5" style="accent-color: var(--accent);" onchange="toggleEmbed()" checked>
+            <label for="embedToggle" class="text-sm">Enable Embed</label>
+          </div>
+          <div id="embedBuilder">
+            <!-- Author Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="field-label">// AUTHOR NAME</label>
+                <input type="text" id="embedAuthorName" class="input-field" placeholder="Author Name" oninput="updatePreview()">
+              </div>
+              <div>
+                <label class="field-label">// AUTHOR IMAGE URL</label>
+                <input type="text" id="embedAuthorImage" class="input-field" placeholder="https://... (Author Icon)" oninput="updatePreview()">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input type="text" id="embedTitle" class="input-field" placeholder="Embed Title" oninput="updatePreview()">
+              <div class="flex gap-2 items-center">
+                <input type="color" id="embedColor" value="#b478ff" class="h-[46px] w-[60px] rounded-lg border border-[var(--border)] bg-transparent cursor-pointer" oninput="syncColor(this.value, 'hex')">
+                <input type="text" id="embedColorHex" value="#b478ff" class="input-field flex-1" oninput="syncColor(this.value, 'picker')" placeholder="#hex">
+              </div>
+            </div>
+            
+            <textarea id="embedDescription" class="textarea-field mt-3" placeholder="Embed Description..." oninput="updatePreview()"></textarea>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="field-label">// LARGE IMAGE URL</label>
+                <input type="text" id="embedImage" class="input-field" placeholder="https://... (Large Image)" oninput="updatePreview()">
+              </div>
+              <div>
+                <label class="field-label">// THUMBNAIL URL</label>
+                <input type="text" id="embedThumbnail" class="input-field" placeholder="https://... (Thumbnail)" oninput="updatePreview()">
+              </div>
+            </div>
+
+            <!-- Footer Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="field-label">// FOOTER TEXT</label>
+                <input type="text" id="embedFooterText" class="input-field" placeholder="Footer Text" oninput="updatePreview()">
+              </div>
+              <div>
+                <label class="field-label">// FOOTER IMAGE URL</label>
+                <input type="text" id="embedFooterImage" class="input-field" placeholder="https://... (Footer Icon)" oninput="updatePreview()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Webhook Profile · Persistent</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="field-label">// NEW NAME</label>
+            <input type="text" id="newName" class="input-field" placeholder="Set webhook name">
+          </div>
+          <div>
+            <label class="field-label">// NEW PFP URL</label>
+            <input type="text" id="newAvatarUrl" class="input-field" placeholder="Set profile picture">
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT PANEL -->
+      <div id="editPanel" class="hidden">
+        <label class="field-label">// MESSAGE ID TO EDIT</label>
+        <input type="text" id="messageId" class="input-field" placeholder="1234567890123456789">
+
+        <label class="field-label mt-4">// NEW MESSAGE CONTENT</label>
+        <textarea id="editContent" class="textarea-field" placeholder="New content..."></textarea>
+        
+        <div class="section-divider"><span>Webhook Profile · Persistent</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="field-label">// NEW NAME</label>
+            <input type="text" id="editNewName" class="input-field" placeholder="Set webhook name">
+          </div>
+          <div>
+            <label class="field-label">// NEW PFP URL</label>
+            <input type="text" id="editNewAvatarUrl" class="input-field" placeholder="Set profile picture">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-3 mt-6">
+        <button id="mainBtn" class="btn-primary flex-1 min-w-[200px]">
+          <span id="mainBtnText">SEND HOOK</span>
+          <div class="press-indicator" id="pressIndicator"></div>
+        </button>
+        <button id="applyProfileBtn" class="btn-ghost">APPLY PROFILE</button>
+        <button id="clearBtn" class="btn-ghost">CLEAR ALL</button>
+      </div>
+
+      <div class="mt-4 p-3 rounded-lg" style="background: rgba(255,56,96,0.05); border: 1px dashed rgba(255,56,96,0.2);">
+        <div class="text-xs title-mono" style="color: var(--danger);">
+          ⚠ LONG-PRESS TIP: Hold the action button to spam. Release to stop.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Preview & Stats -->
+    <div class="space-y-4">
+      <div class="glass-card p-4">
+        <div class="title-mono text-xs text-[var(--muted)] mb-3">// LIVE PREVIEW</div>
+        <div class="discord-preview">
+          <div class="dp-header">
+            <div class="dp-avatar" id="dpAvatar"></div>
+            <div class="dp-body">
+              <div class="dp-user-info">
+                <span class="dp-username" id="dpUsername">IsaiHook</span>
+                <span class="dp-timestamp">Today at 00:00</span>
+              </div>
+              <div class="dp-content" id="dpContent">Message preview will appear here...</div>
+              <div class="dp-embed hidden" id="dpEmbed">
+                <div class="dp-embed-main">
+                  <!-- Author -->
+                  <div class="dp-embed-author" id="dpEmbedAuthorWrap" style="display: none;">
+                    <img id="dpEmbedAuthorImg" class="dp-embed-author-icon" src="" alt="author-icon" style="display: none;">
+                    <span class="dp-embed-author-name" id="dpEmbedAuthorName"></span>
+                  </div>
+                  
+                  <div class="dp-embed-title" id="dpEmbedTitle"></div>
+                  <div class="dp-embed-desc" id="dpEmbedDesc"></div>
+                  <img id="dpEmbedImage" class="dp-embed-image" src="" alt="embed-image" style="display: none;">
+                  
+                  <!-- Footer -->
+                  <div class="dp-embed-footer" id="dpEmbedFooterWrap" style="display: none;">
+                    <img id="dpEmbedFooterImg" class="dp-embed-footer-icon" src="" alt="footer-icon" style="display: none;">
+                    <span class="dp-embed-footer-text" id="dpEmbedFooterText"></span>
+                  </div>
+                </div>
+                <img id="dpEmbedThumbnail" class="dp-embed-thumbnail" src="" alt="embed-thumbnail" style="display: none;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="stat-box">
+            <div class="stat-value" id="statSent">0</div>
+            <div class="stat-label">Sent</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="statFailed">0</div>
+            <div class="stat-label">Failed</div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex justify-between text-xs title-mono text-[var(--muted)] mb-2">
+            <span>SPAM STATUS</span>
+            <span id="spamStatus" class="tag">IDLE</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+        <div class="mt-4 flex justify-between text-xs title-mono">
+          <span class="text-[var(--muted)]">RATE LIMIT</span>
+          <span id="rateLimitStatus" class="tag success">CLEAR</span>
+        </div>
+      </div>
+
+      <div class="glass-card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="title-mono text-xs text-[var(--muted)]">// CONSOLE OUTPUT</div>
+          <button class="text-xs title-mono text-[var(--muted)] hover:text-[var(--accent)] transition" onclick="clearConsole()">CLEAR</button>
+        </div>
+        <div class="console" id="console">
+          <div class="console-line info">[BOOT] IsaiHook terminal initialized</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-[var(--muted)] title-mono mt-10 pb-6">
+    <div class="mb-2">IsaiHook © 2025 · DISCORD API v10 COMPATIBLE</div>
+    <div class="opacity-60">USE RESPONSIBLY · RESPECT DISCORD TOS</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentAction = 'send';
+let isSpamming = false;
+let spamTimeout = null;
+let pressInterval = null;
+let pressProgress = 0;
+let stats = { sent: 0, failed: 0 };
+let rateLimited = false;
+
+const $ = id => document.getElementById(id);
+
+function setAction(action) {
+  currentAction = action;
+  document.querySelectorAll('[data-action]').forEach(el => el.classList.toggle('active', el.dataset.action === action));
+  $('sendPanel').classList.toggle('hidden', action !== 'send');
+  $('editPanel').classList.toggle('hidden', action !== 'edit');
+  if (!isSpamming) $('mainBtnText').textContent = action === 'send' ? 'SEND HOOK' : 'EDIT HOOK';
+  log(`Action switched → ${action.toUpperCase()}`, 'info');
+}
+
+function getWebhookUrls() {
+  const urls = [];
+  const primary = $('webhookUrl').value.trim();
+  if (primary) urls.push(primary);
+  const router = $('channelRouter').value.split('\n').map(u => u.trim()).filter(u => u);
+  urls.push(...router);
+  return [...new Set(urls)];
+}
+
+function updateUrlCount() {
+  const urls = getWebhookUrls();
+  $('urlCount').textContent = `// ${urls.length} endpoint${urls.length === 1 ? '' : 's'} loaded`;
+}
+
+function log(msg, type = 'info') {
+  const c = $('console');
+  const t = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const l = document.createElement('div');
+  l.className = `console-line ${type}`;
+  l.textContent = `[${t}] ${msg}`;
+  c.appendChild(l);
+  c.scrollTop = c.scrollHeight;
+  while (c.children.length > 50) c.removeChild(c.firstChild);
+}
+
+function clearConsole() { $('console').innerHTML = ''; log('Console cleared.', 'info'); }
+
+function toast(msg, type = 'info') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function updateStats() {
+  $('statSent').textContent = stats.sent;
+  $('statFailed').textContent = stats.failed;
+  const total = stats.sent + stats.failed;
+  $('progressFill').style.width = `${total > 0 ? (stats.sent / total) * 100 : 0}%`;
+}
+
+function isValidWebhookUrl(url) {
+  return /^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/(?:v\d+\/)?webhooks\/\d+\/[\w-]+/.test(url);
+}
+
+// ─── Live Preview Logic ───
+function parseMarkdown(text) {
+  if (!text) return '';
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Animated/Static Emojis
+  html = html.replace(/&lt;a:(\w+):(\d+)&gt;/g, '<img class="dp-emoji" src="https://cdn.discordapp.com/emojis/$2.gif" alt="$1">');
+  html = html.replace(/&lt;:(\w+):(\d+)&gt;/g, '<img class="dp-emoji" src="https://cdn.discordapp.com/emojis/$2.png" alt="$1">');
+  // Markdown
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+  html = html.replace(/~~(.+?)~~/g, '<strike>$1</strike>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function toggleEmbed() {
+  $('embedBuilder').classList.toggle('hidden', !$('embedToggle').checked);
+  updatePreview();
+}
+
+function syncColor(val, target) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(val) && target === 'picker') return;
+  if (target === 'hex') {
+    $('embedColor').value = val;
+  } else {
+    $('embedColorHex').value = val;
+  }
+  updatePreview();
+}
+
+function updatePreview() {
+  const name = $('overrideName').value.trim() || 'IsaiHook';
+  const avatar = $('overrideAvatar').value.trim();
+  const content = $('messageContent').value;
+  
+  $('dpUsername').textContent = name;
+  $('dpAvatar').style.background = avatar ? `url('${avatar}') center/cover` : 'var(--accent)';
+  $('dpContent').innerHTML = parseMarkdown(content) || '<span style="color:var(--discord-mute)">Message preview will appear here...</span>';
+  
+  if ($('embedToggle').checked) {
+    const title = $('embedTitle').value;
+    const desc = $('embedDescription').value;
+    const color = $('embedColor').value;
+    const imgUrl = $('embedImage').value.trim();
+    const thumbUrl = $('embedThumbnail').value.trim();
+    
+    // Author Fields
+    const authorName = $('embedAuthorName').value;
+    const authorImg = $('embedAuthorImage').value.trim();
+    
+    // Footer Fields
+    const footerText = $('embedFooterText').value;
+    const footerImg = $('embedFooterImage').value.trim();
+    
+    if (title || desc || imgUrl || thumbUrl || authorName || footerText) {
+      $('dpEmbed').classList.remove('hidden');
+      $('dpEmbed').style.borderLeftColor = color;
+      $('dpEmbedTitle').innerHTML = parseMarkdown(title);
+      $('dpEmbedDesc').innerHTML = parseMarkdown(desc);
+      
+      // Image Rendering
+      const imgEl = $('dpEmbedImage');
+      if (imgUrl) {
+        imgEl.src = imgUrl;
+        imgEl.style.display = 'block';
+      } else {
+        imgEl.style.display = 'none';
+        imgEl.removeAttribute('src');
+      }
+      
+      // Thumbnail Rendering
+      const thumbEl = $('dpEmbedThumbnail');
+      if (thumbUrl) {
+        thumbEl.src = thumbUrl;
+        thumbEl.style.display = 'block';
+      } else {
+        thumbEl.style.display = 'none';
+        thumbEl.removeAttribute('src');
+      }
+      
+      // Author Rendering
+      const authorWrap = $('dpEmbedAuthorWrap');
+      const authorImgEl = $('dpEmbedAuthorImg');
+      const authorNameEl = $('dpEmbedAuthorName');
+      if (authorName || authorImg) {
+        authorWrap.style.display = 'flex';
+        authorNameEl.textContent = authorName;
+        if (authorImg) {
+          authorImgEl.src = authorImg;
+          authorImgEl.style.display = 'inline-block';
+        } else {
+          authorImgEl.style.display = 'none';
+          authorImgEl.removeAttribute('src');
+        }
+      } else {
+        authorWrap.style.display = 'none';
+      }
+      
+      // Footer Rendering
+      const footerWrap = $('dpEmbedFooterWrap');
+      const footerImgEl = $('dpEmbedFooterImg');
+      const footerTextEl = $('dpEmbedFooterText');
+      if (footerText || footerImg) {
+        footerWrap.style.display = 'flex';
+        footerTextEl.textContent = footerText;
+        if (footerImg) {
+          footerImgEl.src = footerImg;
+          footerImgEl.style.display = 'inline-block';
+        } else {
+          footerImgEl.style.display = 'none';
+          footerImgEl.removeAttribute('src');
+        }
+      } else {
+        footerWrap.style.display = 'none';
+      }
+    } else {
+      $('dpEmbed').classList.add('hidden');
+    }
+  } else {
+    $('dpEmbed').classList.add('hidden');
+  }
+}
+
+// ─── Payload Builders ───
+function buildSendPayload() {
+  const body = {};
+  const content = $('messageContent').value;
+  if (content.trim()) body.content = content;
+  
+  if ($('embedToggle').checked) {
+    const title = $('embedTitle').value;
+    const desc = $('embedDescription').value;
+    const color = $('embedColor').value;
+    const imgUrl = $('embedImage').value.trim();
+    const thumbUrl = $('embedThumbnail').value.trim();
+    
+    // Author & Footer
+    const authorName = $('embedAuthorName').value;
+    const authorImg = $('embedAuthorImage').value.trim();
+    const footerText = $('embedFooterText').value;
+    const footerImg = $('embedFooterImage').value.trim();
+    
+    if (title || desc || imgUrl || thumbUrl || authorName || footerText) {
+      body.embeds = [{
+        title: title || undefined,
+        description: desc || undefined,
+        color: parseInt(color.replace('#', ''), 16)
+      }];
+      if (imgUrl) body.embeds[0].image = { url: imgUrl };
+      if (thumbUrl) body.embeds[0].thumbnail = { url: thumbUrl };
+      
+      if (authorName || authorImg) {
+        body.embeds[0].author = {
+          name: authorName || ' ',
+          icon_url: authorImg || undefined
+        };
+      }
+      
+      if (footerText || footerImg) {
+        body.embeds[0].footer = {
+          text: footerText || ' ',
+          icon_url: footerImg || undefined
+        };
+      }
+    }
+  }
+  
+  const username = $('overrideName').value.trim();
+  const avatarUrl = $('overrideAvatar').value.trim();
+  if (username) body.username = username;
+  if (avatarUrl) body.avatar_url = avatarUrl;
+  
+  return (body.content || body.embeds) ? body : null;
+}
+
+async function applyProfile() {
+  const urls = getWebhookUrls();
+  if (!urls.length) { toast('No webhook URL provided', 'error'); return; }
+
+  const name = $('newName').value.trim();
+  const avatarUrl = $('newAvatarUrl').value.trim();
+
+  if (!name && !avatarUrl) { toast('Nothing to apply', 'error'); return; }
+
+  const body = {};
+  if (name) body.name = name;
+  if (avatarUrl) body.avatar = avatarUrl;
+
+  let success = 0;
+  for (const url of urls) {
+    if (!isValidWebhookUrl(url)) continue;
+    try {
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) { log(`Profile updated → ${url.substring(0, 40)}...`, 'success'); success++; }
+      else { const err = await res.text(); log(`Profile update failed (${res.status}): ${err.substring(0, 100)}`, 'error'); }
+    } catch (e) { log(`Network error: ${e.message}`, 'error'); }
+  }
+  toast(`Profile applied to ${success}/${urls.length}`, success > 0 ? 'success' : 'error');
+}
+
+async function sendOnce() {
+  const urls = getWebhookUrls();
+  if (!urls.length) { toast('No webhook URL provided', 'error'); return false; }
+
+  const body = buildSendPayload();
+  if (!body) { if (!isSpamming) toast('Cannot send empty message', 'error'); return false; }
+
+  let allOk = true;
+  await Promise.all(urls.map(async (url) => {
+    if (!isValidWebhookUrl(url)) { log(`Invalid URL skipped`, 'error'); stats.failed++; allOk = false; return; }
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok || res.status === 204) { stats.sent++; log(`✓ Sent → ${url.substring(0, 40)}...`, 'success'); }
+      else if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retry = data.retry_after || 1.5;
+        log(`RATE LIMITED · retry_after ${retry}s`, 'error');
+        stats.failed++; allOk = false;
+        rateLimited = true;
+        $('rateLimitStatus').textContent = 'THROTTLED';
+        $('rateLimitStatus').className = 'tag danger';
+        await new Promise(r => setTimeout(r, retry * 1000 + 200));
+        setTimeout(() => {
+          rateLimited = false;
+          $('rateLimitStatus').textContent = 'CLEAR';
+          $('rateLimitStatus').className = 'tag success';
+        }, retry * 1000);
+      } else {
+        const err = await res.text();
+        log(`Send failed (${res.status}): ${err.substring(0, 100)}`, 'error');
+        stats.failed++; allOk = false;
+      }
+    } catch (e) { log(`Network error: ${e.message}`, 'error'); stats.failed++; allOk = false; }
+  }));
+  updateStats();
+  return allOk;
+}
+
+async function editOnce() {
+  const urls = getWebhookUrls();
+  if (!urls.length) { toast('No webhook URL provided', 'error'); return false; }
+
+  const messageId = $('messageId').value.trim();
+  const content = $('editContent').value;
+  if (!messageId) { if (!isSpamming) toast('Message ID required', 'error'); return false; }
+  if (!content.trim()) { if (!isSpamming) toast('New content required', 'error'); return false; }
+
+  const body = { content };
+  let allOk = true;
+
+  await Promise.all(urls.map(async (url) => {
+    if (!isValidWebhookUrl(url)) return;
+    try {
+      const res = await fetch(`${url}/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) { stats.sent++; log(`✓ Edited ${messageId}`, 'success'); }
+      else if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retry = data.retry_after || 1.5;
+        log(`RATE LIMITED · retry_after ${retry}s`, 'error');
+        stats.failed++; allOk = false;
+        await new Promise(r => setTimeout(r, retry * 1000 + 200));
+      } else {
+        const err = await res.text();
+        log(`Edit failed (${res.status}): ${err.substring(0, 100)}`, 'error');
+        stats.failed++; allOk = false;
+      }
+    } catch (e) { log(`Network error: ${e.message}`, 'error'); stats.failed++; allOk = false; }
+  }));
+  updateStats();
+  return allOk;
+}
+
+// ─── Spam Control ───
+async function spamCycle() {
+  if (!isSpamming) return;
+  try { if (currentAction === 'send') await sendOnce(); else await editOnce(); } catch (e) { log(`Spam error: ${e.message}`, 'error'); }
+  if (isSpamming) spamTimeout = setTimeout(spamCycle, rateLimited ? 1500 : 600);
+}
+
+function startSpam() {
+  if (isSpamming) return;
+  isSpamming = true;
+  $('mainBtn').classList.add('spamming');
+  $('mainBtnText').textContent = 'SPAMMING...';
+  $('spamStatus').textContent = 'ACTIVE';
+  $('spamStatus').className = 'tag danger';
+  $('globalStatus').classList.add('spamming');
+  log('⚠ SPAM MODE ENGAGED', 'warn');
+  spamCycle();
+}
+
+function stopSpam() {
+  isSpamming = false;
+  if (spamTimeout) { clearTimeout(spamTimeout); spamTimeout = null; }
+  $('mainBtn').classList.remove('spamming');
+  $('mainBtnText').textContent = currentAction === 'send' ? 'SEND HOOK' : 'EDIT HOOK';
+  $('spamStatus').textContent = 'IDLE';
+  $('spamStatus').className = 'tag';
+  $('globalStatus').classList.remove('spamming');
+  $('pressIndicator').style.width = '0%';
+}
+
+const PRESS_THRESHOLD = 450;
+
+function startPress(e) {
+  if (e.cancelable) e.preventDefault();
+  pressProgress = 0;
+  pressInterval = setInterval(() => {
+    pressProgress += 20;
+    $('pressIndicator').style.width = `${Math.min(pressProgress / PRESS_THRESHOLD * 100, 100)}%`;
+    if (pressProgress >= PRESS_THRESHOLD) {
+      clearInterval(pressInterval); pressInterval = null;
+      startSpam();
+    }
+  }, 20);
+}
+
+function endPress() {
+  if (pressInterval) {
+    clearInterval(pressInterval); pressInterval = null;
+    $('pressIndicator').style.width = '0%';
+    if (currentAction === 'send') sendOnce(); else editOnce();
+  } else if (isSpamming) { stopSpam(); }
+}
+
+const mainBtn = $('mainBtn');
+mainBtn.addEventListener('mousedown', startPress);
+mainBtn.addEventListener('mouseup', endPress);
+mainBtn.addEventListener('mouseleave', () => {
+  if (pressInterval) { clearInterval(pressInterval); pressInterval = null; $('pressIndicator').style.width = '0%'; }
+  if (isSpamming) stopSpam();
+});
+mainBtn.addEventListener('touchstart', startPress, { passive: false });
+mainBtn.addEventListener('touchend', endPress);
+mainBtn.addEventListener('click', (e) => { if (e.detail === 0) { if (currentAction === 'send') sendOnce(); else editOnce(); } });
+
+ $('applyProfileBtn').addEventListener('click', applyProfile);
+ $('clearBtn').addEventListener('click', () => {
+  ['webhookUrl','channelRouter','messageContent','overrideName','overrideAvatar',
+   'newName','newAvatarUrl','messageId','editContent','embedTitle','embedDescription', 
+   'embedImage', 'embedThumbnail', 'embedAuthorName', 'embedAuthorImage', 'embedFooterText', 'embedFooterImage']
+   .forEach(id => { if ($(id)) $(id).value = ''; });
+  stats = { sent: 0, failed: 0 };
+  updateStats(); updateUrlCount(); updatePreview();
+  toast('Cleared', 'success');
+});
+
+// Init
+updatePreview();
+log('System ready. Embeds and Emojis active.', 'success');
+</script>
+</body>
+</html>
