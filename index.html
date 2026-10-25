@@ -38,26 +38,24 @@
       align-items: center;
       position: relative;
       padding: 40px 16px 60px;
-      perspective: 1200px;
     }
 
-    /* Volumetric Cloud Motion Gradient Background */
-    .cloud-stage {
+    /* Ambient Outer Clouds */
+    .outer-cloud-stage {
       position: fixed;
-      inset: -40%;
-      width: 180%;
-      height: 180%;
+      inset: -30%;
+      width: 160%;
+      height: 160%;
       z-index: -1;
       overflow: hidden;
       pointer-events: none;
-      filter: blur(75px) contrast(140%);
-      transition: transform 0.1s ease-out;
+      filter: blur(80px) contrast(140%);
     }
 
     .cloud {
       position: absolute;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(0, 0, 0, 0) 75%);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(0, 0, 0, 0) 75%);
       mix-blend-mode: screen;
       animation: driftClouds 32s infinite alternate ease-in-out;
     }
@@ -65,7 +63,6 @@
     .cloud-1 { width: 900px; height: 600px; top: 10%; left: 5%; animation-duration: 38s; }
     .cloud-2 { width: 1100px; height: 750px; bottom: 5%; right: 0%; animation-duration: 44s; opacity: 0.8; }
     .cloud-3 { width: 700px; height: 500px; top: 40%; left: 45%; animation-duration: 28s; opacity: 0.6; }
-    .cloud-4 { width: 850px; height: 650px; bottom: 30%; left: 15%; animation-duration: 34s; opacity: 0.5; }
 
     @keyframes driftClouds {
       0% {
@@ -82,11 +79,11 @@
       }
     }
 
-    /* Cursor Reactive 3D Liquid Glass Shell */
+    /* Fixed Liquid Glass Container (UI is stable) */
     .app-card {
       width: 100%;
       max-width: 900px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.7) 100%);
+      background: rgba(8, 8, 10, 0.75);
       backdrop-filter: blur(50px) saturate(160%);
       -webkit-backdrop-filter: blur(50px) saturate(160%);
       border: 1px solid var(--glass-border);
@@ -97,19 +94,43 @@
         0 40px 100px -20px rgba(0, 0, 0, 0.95),
         inset 0 1px 1px var(--glass-highlight),
         inset 0 -1px 2px rgba(255, 255, 255, 0.05);
-      transform-style: preserve-3d;
+      overflow: hidden;
+    }
+
+    /* Internal Liquid Cloud Gradients Reacting to Cursor */
+    .internal-cloud-container {
+      position: absolute;
+      inset: -30%;
+      width: 160%;
+      height: 160%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(50px) contrast(150%);
+      opacity: 0.65;
       will-change: transform;
     }
 
-    /* Cursor-Following Specular Glare */
+    .internal-cloud-blob {
+      position: absolute;
+      border-radius: 50%;
+      mix-blend-mode: screen;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0) 70%);
+      transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .blob-center { width: 600px; height: 500px; top: 30%; left: 30%; }
+    .blob-trail { width: 450px; height: 400px; top: 20%; left: 20%; opacity: 0.7; }
+    .blob-drift { width: 550px; height: 450px; bottom: 20%; right: 20%; opacity: 0.5; }
+
+    /* Light Spot */
     .app-card::after {
       content: '';
       position: absolute;
       inset: 0;
       border-radius: 28px;
       background: radial-gradient(
-        550px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.16),
+        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.12),
         transparent 65%
       );
       pointer-events: none;
@@ -153,7 +174,7 @@
       gap: 10px;
     }
 
-    /* Preview Trigger Button (Top Right) */
+    /* Live Preview Button (Top Right) */
     .preview-btn {
       padding: 8px 18px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
@@ -249,12 +270,20 @@
     /* Form Fields */
     .form-group {
       margin-bottom: 16px;
+      position: relative;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
+    }
+
+    .label-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px;
     }
 
     label {
@@ -265,6 +294,8 @@
       color: var(--text-silver);
       margin-bottom: 7px;
     }
+
+    .label-header label { margin-bottom: 0; }
 
     input[type="text"], input[type="url"], textarea {
       width: 100%;
@@ -290,7 +321,7 @@
       min-height: 85px;
     }
 
-    /* File Combos */
+    /* File / Button Inputs */
     .input-combo {
       display: flex;
       gap: 8px;
@@ -298,7 +329,7 @@
     }
 
     .file-btn {
-      padding: 11px 16px;
+      padding: 10px 15px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
       border: 1px solid var(--glass-border);
       border-radius: 12px;
@@ -311,6 +342,9 @@
       color: var(--text-silver);
       transition: all 0.25s ease;
       box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .file-btn input[type="file"] {
@@ -335,6 +369,156 @@
       box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
     }
 
+    .media-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-silver);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .media-badge span.remove-btn {
+      cursor: pointer;
+      color: #ef4444;
+      font-weight: 700;
+    }
+
+    /* COLOR BOARD / PALETTE POPOVER */
+    .color-board-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 100%;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(25px);
+      z-index: 100;
+      display: none;
+      animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .color-board-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .color-board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-silver);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .color-board-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .color-action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .color-action-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Grid of Color Swatches */
+    .color-swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .color-tile {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .color-tile:hover {
+      transform: scale(1.18);
+      z-index: 2;
+      border-color: #ffffff;
+      box-shadow: 0 0 14px currentColor;
+    }
+
+    .custom-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .custom-picker-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .native-color-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    .native-color-trigger input[type="color"] {
+      width: 20px;
+      height: 20px;
+      border: none;
+      outline: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .color-indicator-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      display: inline-block;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+
     .section-title {
       font-size: 12px;
       font-weight: 700;
@@ -356,7 +540,7 @@
       background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent);
     }
 
-    /* Motion Button */
+    /* Motion Action Button */
     .action-container {
       margin-top: 28px;
       display: flex;
@@ -393,7 +577,6 @@
       background: linear-gradient(135deg, #3f3f46 0%, #18181b 50%, #3f3f46 100%);
       box-shadow: 0 12px 35px rgba(255, 255, 255, 0.15), inset 0 1px 1px #ffffff;
       border-color: rgba(255, 255, 255, 0.6);
-      transform: translateY(-1px);
     }
 
     .send-btn:active { transform: scale(0.99); }
@@ -497,9 +680,7 @@
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .preview-modal-overlay.active .preview-window {
-      transform: scale(1);
-    }
+    .preview-modal-overlay.active .preview-window { transform: scale(1); }
 
     .preview-header {
       display: flex;
@@ -529,10 +710,7 @@
     .close-btn:hover { color: #fff; }
 
     /* Discord Simulation UI */
-    .discord-msg-row {
-      display: flex;
-      gap: 16px;
-    }
+    .discord-msg-row { display: flex; gap: 16px; }
 
     .discord-avatar {
       width: 44px;
@@ -544,10 +722,7 @@
       flex-shrink: 0;
     }
 
-    .discord-content-pane {
-      flex: 1;
-      overflow: hidden;
-    }
+    .discord-content-pane { flex: 1; overflow: hidden; }
 
     .discord-meta {
       display: flex;
@@ -556,11 +731,7 @@
       margin-bottom: 5px;
     }
 
-    .discord-username {
-      font-weight: 700;
-      font-size: 15px;
-      color: #ffffff;
-    }
+    .discord-username { font-weight: 700; font-size: 15px; color: #ffffff; }
 
     .discord-bot-badge {
       font-size: 10px;
@@ -572,10 +743,7 @@
       line-height: 14px;
     }
 
-    .discord-timestamp {
-      font-size: 11px;
-      color: #949ba4;
-    }
+    .discord-timestamp { font-size: 11px; color: #949ba4; }
 
     .discord-plain-text {
       font-size: 14px;
@@ -584,6 +752,27 @@
       word-break: break-word;
       white-space: pre-wrap;
       margin-bottom: 8px;
+    }
+
+    .discord-media-preview-container { margin-bottom: 10px; }
+
+    .discord-attached-media {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .discord-file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #2b2d31;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 12px;
+      color: #dbdee1;
     }
 
     /* Discord Embed */
@@ -614,11 +803,7 @@
       object-fit: cover;
     }
 
-    .embed-title-text {
-      font-size: 15px;
-      font-weight: 700;
-      color: #ffffff;
-    }
+    .embed-title-text { font-size: 15px; font-weight: 700; color: #ffffff; }
 
     .embed-desc-text {
       font-size: 13px;
@@ -678,21 +863,29 @@
       .grid-2 { grid-template-columns: 1fr; }
       .app-card { padding: 22px; }
       .brand-title { font-size: 26px; }
+      .color-swatch-grid { grid-template-columns: repeat(4, 1fr); }
     }
   </style>
 </head>
 <body>
 
-  <!-- Cloud Motion Gradient Background -->
-  <div class="cloud-stage" id="cloudStage">
+  <!-- Ambient Outer Clouds -->
+  <div class="outer-cloud-stage">
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
     <div class="cloud cloud-3"></div>
-    <div class="cloud cloud-4"></div>
   </div>
 
-  <!-- Cursor-Reactive 3D Liquid Glass Card -->
-  <div class="app-card" id="reactiveCard">
+  <!-- Stable Glass Card (UI does not move; internal clouds react to cursor) -->
+  <div class="app-card" id="appCard">
+    
+    <!-- Internal Liquid Cloud Gradients Reacting to Cursor -->
+    <div class="internal-cloud-container" id="internalCloudStage">
+      <div class="internal-cloud-blob blob-center" id="cloudBlob1"></div>
+      <div class="internal-cloud-blob blob-trail" id="cloudBlob2"></div>
+      <div class="internal-cloud-blob blob-drift" id="cloudBlob3"></div>
+    </div>
+
     <div class="content-relative">
       <header>
         <div>
@@ -760,10 +953,20 @@
         </div>
       </div>
 
-      <!-- Text Message -->
+      <!-- Message Content Box with MEDIA / FILE ATTACHMENT -->
       <div class="form-group">
-        <label>Message Content</label>
+        <div class="label-header">
+          <label>Message Content</label>
+          <label class="file-btn" id="file-label-content-media">
+            📎 Attach Media / File
+            <input type="file" id="file-content-media" onchange="handleContentMediaSelect(this)">
+          </label>
+        </div>
         <textarea id="message-content" placeholder="Content text outside the embed..."></textarea>
+        <div id="content-media-badge" class="media-badge" style="display: none;">
+          <span id="content-media-name">file.png</span>
+          <span class="remove-btn" onclick="removeContentMedia()" title="Remove file">✕</span>
+        </div>
       </div>
 
       <!-- Embed Module -->
@@ -774,9 +977,44 @@
           <label>Embed Title</label>
           <input type="text" id="embed-title" placeholder="Embed Title">
         </div>
-        <div class="form-group">
-          <label>Embed Accent Color</label>
-          <input type="text" id="embed-color" placeholder="#ffffff or 0x000000">
+
+        <!-- EMBED ACCENT COLOR WITH COLOR BOARD / PALETTE -->
+        <div class="form-group" id="colorPickerGroup">
+          <div class="label-header">
+            <label>Embed Accent Color</label>
+            <button type="button" class="file-btn" onclick="toggleColorBoard(event)">
+              <span class="color-indicator-dot" id="headerColorIndicator" style="background-color: #ffffff;"></span>
+              🎨 Color Board
+            </button>
+          </div>
+          <div class="input-combo">
+            <input type="text" id="embed-color" placeholder="#ffffff or 0x000000" oninput="syncColorIndicator(this.value)">
+          </div>
+
+          <!-- Color Board Dropdown Panel -->
+          <div class="color-board-panel" id="colorBoardPanel">
+            <div class="color-board-header">
+              <span>HEX Color Palette</span>
+              <div class="color-board-actions">
+                <button type="button" class="color-action-btn" onclick="applyRandomColor()">🎲 Random</button>
+                <button type="button" class="color-action-btn" onclick="toggleColorBoard(event, false)">✕</button>
+              </div>
+            </div>
+
+            <!-- Preset Swatches Grid -->
+            <div class="color-swatch-grid" id="swatchGrid">
+              <!-- Swatches generated dynamically via JS -->
+            </div>
+
+            <!-- Custom Wheel / Native Picker -->
+            <div class="custom-picker-row">
+              <span class="custom-picker-label">Pick custom shade:</span>
+              <label class="native-color-trigger">
+                <input type="color" id="nativeColorPicker" value="#ffffff" oninput="selectColor(this.value)">
+                <span>Custom Wheel</span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -880,6 +1118,10 @@
 
           <div class="discord-plain-text" id="prevPlainText" style="display: none;"></div>
 
+          <!-- Direct Attached Media Preview -->
+          <div class="discord-media-preview-container" id="prevMediaContainer" style="display: none;"></div>
+
+          <!-- Embed Preview -->
           <div class="discord-embed-card" id="prevEmbedCard" style="display: none;">
             <div class="embed-author-row" id="prevAuthorRow" style="display: none;">
               <img id="prevAuthorAvatar" src="" alt="">
@@ -916,42 +1158,138 @@
 
     const mainActionBtn = document.getElementById('main-action-btn');
     const consoleBody = document.getElementById('console');
-    const reactiveCard = document.getElementById('reactiveCard');
-    const cloudStage = document.getElementById('cloudStage');
+    const appCard = document.getElementById('appCard');
     const previewModal = document.getElementById('previewModal');
 
-    // 3D Tilt & Mouse Tracking
-    let targetTiltX = 0, targetTiltY = 0;
-    let currentTiltX = 0, currentTiltY = 0;
+    // Cloud Gradient Elements
+    const cloudBlob1 = document.getElementById('cloudBlob1');
+    const cloudBlob2 = document.getElementById('cloudBlob2');
+    const cloudBlob3 = document.getElementById('cloudBlob3');
 
-    window.addEventListener('mousemove', (e) => {
-      const { innerWidth: w, innerHeight: h } = window;
-      targetTiltX = (e.clientX - w / 2) / (w / 2);
-      targetTiltY = (e.clientY - h / 2) / (h / 2);
+    // Color Board Elements
+    const colorBoardPanel = document.getElementById('colorBoardPanel');
+    const embedColorInput = document.getElementById('embed-color');
+    const headerColorIndicator = document.getElementById('headerColorIndicator');
+    const nativeColorPicker = document.getElementById('nativeColorPicker');
+    const swatchGrid = document.getElementById('swatchGrid');
 
-      const rect = reactiveCard.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      reactiveCard.style.setProperty('--mouse-x', `${x}px`);
-      reactiveCard.style.setProperty('--mouse-y', `${y}px`);
+    // Palette Presets (Discord Theme + Aesthetic Colors)
+    const PRESET_COLORS = [
+      '#FFFFFF', '#D4D4D8', '#71717A', '#2B2D31', '#18181B', '#000000', '#5865F2', '#57F287',
+      '#FEE75C', '#EB459E', '#ED4245', '#00FFFF', '#8B5CF6', '#F43F5E', '#38BDF8', '#10B981'
+    ];
+
+    // Build Swatches
+    PRESET_COLORS.forEach(hex => {
+      const tile = document.createElement('div');
+      tile.className = 'color-tile';
+      tile.style.backgroundColor = hex;
+      tile.title = hex;
+      tile.onclick = () => selectColor(hex);
+      swatchGrid.appendChild(tile);
     });
 
-    function renderParallax() {
-      currentTiltX += (targetTiltX - currentTiltX) * 0.08;
-      currentTiltY += (targetTiltY - currentTiltY) * 0.08;
-
-      reactiveCard.style.transform = `
-        rotateX(${-currentTiltY * 6}deg) 
-        rotateY(${currentTiltX * 6}deg) 
-        translate3d(${currentTiltX * 8}px, ${currentTiltY * 8}px, 0)
-      `;
-      cloudStage.style.transform = `translate(${currentTiltX * -30}px, ${currentTiltY * -30}px)`;
-
-      requestAnimationFrame(renderParallax);
+    function toggleColorBoard(e, forceState) {
+      if (e) e.stopPropagation();
+      const isActive = forceState !== undefined ? forceState : !colorBoardPanel.classList.contains('active');
+      colorBoardPanel.classList.toggle('active', isActive);
     }
-    requestAnimationFrame(renderParallax);
 
-    // Live Preview Rendering
+    // Close palette when clicking outside
+    window.addEventListener('click', (e) => {
+      if (!colorBoardPanel.contains(e.target)) {
+        colorBoardPanel.classList.remove('active');
+      }
+    });
+
+    function selectColor(hex) {
+      embedColorInput.value = hex;
+      syncColorIndicator(hex);
+      if (previewModal.classList.contains('active')) updateLivePreview();
+    }
+
+    function syncColorIndicator(val) {
+      val = val.trim();
+      if (!val.startsWith('#') && !val.startsWith('0x') && val.length === 6) {
+        val = '#' + val;
+      }
+      headerColorIndicator.style.backgroundColor = val || '#ffffff';
+      headerColorIndicator.style.boxShadow = `0 0 10px ${val || '#ffffff'}`;
+      if (val.startsWith('#') && val.length === 7) {
+        nativeColorPicker.value = val;
+      }
+    }
+
+    function applyRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      selectColor(color);
+    }
+
+    // CURSOR TRACKING: UI stays fixed, internal cloud gradients shift smoothly
+    let targetX = 0, targetY = 0;
+    let curX1 = 0, curY1 = 0;
+    let curX2 = 0, curY2 = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = appCard.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left;
+      const relativeY = e.clientY - rect.top;
+
+      appCard.style.setProperty('--mouse-x', `${relativeX}px`);
+      appCard.style.setProperty('--mouse-y', `${relativeY}px`);
+
+      targetX = (relativeX - rect.width / 2) / (rect.width / 2);
+      targetY = (relativeY - rect.height / 2) / (rect.height / 2);
+    });
+
+    function animateInternalClouds() {
+      curX1 += (targetX * 60 - curX1) * 0.05;
+      curY1 += (targetY * 60 - curY1) * 0.05;
+
+      curX2 += (targetX * -45 - curX2) * 0.03;
+      curY2 += (targetY * -45 - curY2) * 0.03;
+
+      cloudBlob1.style.transform = `translate(${curX1}px, ${curY1}px) scale(${1 + Math.abs(targetX) * 0.1})`;
+      cloudBlob2.style.transform = `translate(${curX1 * 1.3}px, ${curY1 * 1.3}px)`;
+      cloudBlob3.style.transform = `translate(${curX2}px, ${curY2}px) scale(${1 + Math.abs(targetY) * 0.15})`;
+
+      requestAnimationFrame(animateInternalClouds);
+    }
+    requestAnimationFrame(animateInternalClouds);
+
+    // MESSAGE CONTENT MEDIA ATTACHMENT HANDLERS
+    function handleContentMediaSelect(input) {
+      const badge = document.getElementById('content-media-badge');
+      const nameSpan = document.getElementById('content-media-name');
+      const btn = document.getElementById('file-label-content-media');
+
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        nameSpan.innerText = file.name + ` (${(file.size / 1024).toFixed(1)} KB)`;
+        badge.style.display = 'inline-flex';
+        btn.classList.add('has-file');
+      } else {
+        removeContentMedia();
+      }
+      if (previewModal.classList.contains('active')) updateLivePreview();
+    }
+
+    function removeContentMedia() {
+      const fileInput = document.getElementById('file-content-media');
+      const badge = document.getElementById('content-media-badge');
+      const btn = document.getElementById('file-label-content-media');
+
+      fileInput.value = '';
+      badge.style.display = 'none';
+      btn.classList.remove('has-file');
+      if (previewModal.classList.contains('active')) updateLivePreview();
+    }
+
+    // LIVE PREVIEW MODAL
     function togglePreview(show) {
       if (show) {
         updateLivePreview();
@@ -967,10 +1305,11 @@
 
     function getLocalOrRemoteSrc(fileInputId, urlInputId) {
       const fileInput = document.getElementById(fileInputId);
-      if (fileInput.files && fileInput.files[0]) {
+      if (fileInput && fileInput.files && fileInput.files[0]) {
         return URL.createObjectURL(fileInput.files[0]);
       }
-      return document.getElementById(urlInputId).value.trim();
+      const urlInput = document.getElementById(urlInputId);
+      return urlInput ? urlInput.value.trim() : '';
     }
 
     function updateLivePreview() {
@@ -989,6 +1328,30 @@
         prevPlain.style.display = 'block';
       } else {
         prevPlain.style.display = 'none';
+      }
+
+      // Content Attached File / Media Preview
+      const mediaInput = document.getElementById('file-content-media');
+      const mediaContainer = document.getElementById('prevMediaContainer');
+      mediaContainer.innerHTML = '';
+
+      if (mediaInput.files && mediaInput.files[0]) {
+        const file = mediaInput.files[0];
+        mediaContainer.style.display = 'block';
+
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.className = 'discord-attached-media';
+          mediaContainer.appendChild(img);
+        } else {
+          const pill = document.createElement('div');
+          pill.className = 'discord-file-pill';
+          pill.innerHTML = `📄 <span>${file.name}</span> <small style="color: #949ba4;">(${(file.size / 1024).toFixed(1)} KB)</small>`;
+          mediaContainer.appendChild(pill);
+        }
+      } else {
+        mediaContainer.style.display = 'none';
       }
 
       // Embed elements
@@ -1085,7 +1448,7 @@
       embedCard.style.display = hasEmbed ? 'flex' : 'none';
     }
 
-    // Bind real-time input listeners for preview syncing
+    // Live preview sync listeners
     document.querySelectorAll('input, textarea').forEach(el => {
       el.addEventListener('input', () => {
         if (previewModal.classList.contains('active')) updateLivePreview();
@@ -1161,11 +1524,13 @@
       return isNaN(parsed) ? null : parsed;
     }
 
+    // COMPILE PAYLOAD (Supports Discord multipart attachments & media files)
     function compilePayload() {
       const formData = new FormData();
       let fileCount = 0;
 
       const content = document.getElementById('message-content').value;
+      const mediaFile = document.getElementById('file-content-media').files[0];
       const username = document.getElementById('custom-username').value;
       const avatarUrl = document.getElementById('custom-avatar-url').value;
 
@@ -1191,6 +1556,12 @@
       if (content) payload.content = content;
       if (username) payload.username = username;
       if (avatarUrl) payload.avatar_url = avatarUrl;
+
+      // Attach Content Media if uploaded
+      if (mediaFile) {
+        formData.append(`files[${fileCount}]`, mediaFile, mediaFile.name);
+        fileCount++;
+      }
 
       const embed = {};
       let hasEmbed = false;
